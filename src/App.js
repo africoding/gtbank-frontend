@@ -1,25 +1,31 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+import { AuthProvider } from "./AuthContext";
+import Splash from "./screens/Splash";
+import Auth from "./screens/Auth";
+import Dashboard from "./screens/Dashboard";
+import Transfer from "./screens/Transfer";
+import History from "./screens/History";
+import Profile from "./screens/Profile";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+function AppContent() {
+  const [screen, setScreen] = useState("splash");
+
+  const screens = {
+    splash: <Splash setScreen={setScreen} />,
+    auth: <Auth setScreen={setScreen} />,
+    dashboard: <Dashboard setScreen={setScreen} />,
+    transfer: <Transfer setScreen={setScreen} />,
+    history: <History setScreen={setScreen} />,
+    profile: <Profile setScreen={setScreen} />
+  };
+
+  return screens[screen] || screens["dashboard"];
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
