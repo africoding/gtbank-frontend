@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import { API, COLORS as C } from "../constants";
 import { S } from "../styles";
@@ -10,8 +10,24 @@ export default function AddMoney({ setScreen }) {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [paid, setPaid] = useState(false);
 
   const numAmount = parseFloat(amount || 0);
+
+  // Refresh balance after payment
+  const refreshBalance = async () => {
+    try {
+      const res = await fetch(`${API}/balance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      updateBalance(data.balance);
+      setPaid(false);
+      setScreen("dashboard");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleFund = async () => {
     if (!amount || numAmount < 100) {
@@ -32,9 +48,9 @@ export default function AddMoney({ setScreen }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
 
-      // Open Paystack payment page
+      setPaid(true);
       window.open(data.payment_url, "_blank");
-      setScreen("dashboard");
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -58,67 +74,67 @@ export default function AddMoney({ setScreen }) {
           <h2 style={{ margin: 0, fontSize: "28px" }}>₦{user?.balance?.toLocaleString()}</h2>
         </div>
 
+        {/* After Payment - Show Refresh Button */}
+        {paid && (
+          <div style={{ ...S.card, textAlign: "center", border: `1px solid ${C.success}` }}>
+            <p style={{ color: C.success, fontWeight: "bold", margin: "0 0 12px" }}>
+              ✅ Payment completed on Paystack?
+            </p>
+            <p style={{ color: C.gray, fontSize: "13px", margin: "0 0 16px" }}>
+              Click below to refresh your balance
+            </p>
+            <button style={{ ...S.btn, backgroundColor: C.success }} onClick={refreshBalance}>
+              🔄 Refresh My Balance
+            </button>
+          </div>
+        )}
+
         {/* Amount Input */}
-        <div style={S.card}>
-          <p style={{ color: C.gray, fontSize: "12px", margin: "0 0 6px" }}>Enter Amount</p>
-          <div style={{ fontSize: "32px", fontWeight: "bold", marginBottom: "8px" }}>
-            ₦ {amount || "0"}<span style={{ color: C.gray }}>.00</span>
-          </div>
-          {numAmount > 0 && numAmount < 100 && (
-            <p style={{ color: C.error, fontSize: "12px" }}>⚠️ Minimum funding amount is ₦100</p>
-          )}
-          <input
-            style={S.input}
-            placeholder="Enter amount"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            type="number"
-          />
-
-          {/* Quick Amounts */}
-          <div style={S.quickGrid}>
-            {QUICK_AMOUNTS.map(q => (
-              <button
-                key={q}
-                style={S.quickBtn}
-                onClick={() => setAmount(q.toString())}
-              >
-                ₦{q.toLocaleString()}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Payment Method */}
-        <div style={S.card}>
-          <p style={{ margin: "0 0 12px", fontWeight: "bold", color: C.orange }}>💳 Payment Method</p>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", backgroundColor: C.dark, borderRadius: "10px", border: `1px solid ${C.orange}` }}>
-            <span style={{ fontSize: "24px" }}>💳</span>
-            <div>
-              <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px" }}>Debit Card / Bank Transfer</p>
-              <p style={{ margin: 0, fontSize: "12px", color: C.gray }}>Powered by Paystack</p>
+        {!paid && (
+          <>
+            <div style={S.card}>
+              <p style={{ color: C.gray, fontSize: "12px", margin: "0 0 6px" }}>Enter Amount</p>
+              <div style={{ fontSize: "32px", fontWeight: "bold", marginBottom: "8px" }}>
+                ₦ {amount || "0"}<span style={{ color: C.gray }}>.00</span>
+              </div>
+              {numAmount > 0 && numAmount < 100 && (
+                <p style={{ color: C.error, fontSize: "12px" }}>⚠️ Minimum funding amount is ₦100</p>
+              )}
+              <input style={S.input} placeholder="Enter amount" value={amount} onChange={e => setAmount(e.target.value)} type="number" />
+              <div style={S.quickGrid}>
+                {QUICK_AMOUNTS.map(q => (
+                  <button key={q} style={S.quickBtn} onClick={() => setAmount(q.toString())}>
+                    ₦{q.toLocaleString()}
+                  </button>
+                ))}
+              </div>
             </div>
-            <span style={{ marginLeft: "auto", color: C.success }}>✅</span>
-          </div>
-        </div>
 
-        {/* Test Mode Notice */}
-        <div style={{ ...S.card, border: `1px solid ${C.gold}44`, backgroundColor: `${C.gold}11` }}>
-          <p style={{ margin: 0, fontSize: "12px", color: C.gold }}>
-            🧪 Test Mode Active — Use card: 4084084084084081
-          </p>
-        </div>
+            <div style={S.card}>
+              <p style={{ margin: "0 0 12px", fontWeight: "bold", color: C.orange }}>💳 Payment Method</p>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", backgroundColor: C.dark, borderRadius: "10px", border: `1px solid ${C.orange}` }}>
+                <span style={{ fontSize: "24px" }}>💳</span>
+                <div>
+                  <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px" }}>Debit Card / Bank Transfer</p>
+                  <p style={{ margin: 0, fontSize: "12px", color: C.gray }}>Powered by Paystack</p>
+                </div>
+                <span style={{ marginLeft: "auto", color: C.success }}>✅</span>
+              </div>
+            </div>
 
-        {error && <div style={S.error}>❌ {error}</div>}
+            <div style={{ ...S.card, border: `1px solid ${C.gold}44`, backgroundColor: `${C.gold}11` }}>
+              <p style={{ margin: 0, fontSize: "12px", color: C.gold }}>
+                🧪 Test Mode — Card: 4084084084084081 | Expiry: 12/30 | CVV: 408 | OTP: 123456
+              </p>
+            </div>
 
-        <button
-          style={{ ...S.btn, backgroundColor: loading ? C.gray : C.orange }}
-          onClick={handleFund}
-          disabled={loading}
-        >
-          {loading ? "⏳ Initializing payment..." : `Fund Account ₦${numAmount.toLocaleString() || "0"}`}
-        </button>
+            {error && <div style={S.error}>❌ {error}</div>}
 
+            <button style={{ ...S.btn, backgroundColor: loading ? C.gray : C.orange }} onClick={handleFund} disabled={loading}>
+              {loading ? "⏳ Initializing payment..." : `Fund Account ₦${numAmount.toLocaleString() || "0"}`}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
