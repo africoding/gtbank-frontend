@@ -1,13 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
-import { COLORS as C } from "../constants";
+import { API, COLORS as C } from "../constants";
 import { S } from "../styles";
 
 export default function Dashboard({ setScreen }) {
-  const { user, logout } = useAuth();
+  const { user, token } = useAuth();
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [tickerIndex, setTickerIndex] = useState(0);
+  const [tickerVisible, setTickerVisible] = useState(true);
 
   const comingSoon = () => alert("Coming Soon 🚀");
+
+  // Fetch transactions on load
+  useEffect(() => {
+    if (token) fetchTransactions();
+  }, [token]);
+
+  // Ticker animation
+  useEffect(() => {
+    if (transactions.length === 0) return;
+    const interval = setInterval(() => {
+      setTickerVisible(false);
+      setTimeout(() => {
+        setTickerIndex(prev => (prev + 1) % transactions.length);
+        setTickerVisible(true);
+      }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [transactions]);
+
+  const fetchTransactions = async () => {
+    try {
+      const res = await fetch(`${API}/transactions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) setTransactions(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const currentTx = transactions[tickerIndex];
 
   const bottomNav = [
     { icon: "🏠", label: "Home", action: () => setScreen("dashboard") },
@@ -68,6 +101,34 @@ export default function Dashboard({ setScreen }) {
             </button>
           </div>
         </div>
+
+        {/* TRANSACTION TICKER */}
+        {transactions.length > 0 && currentTx && (
+          <div
+            onClick={() => setScreen("history")}
+            style={{ backgroundColor: C.card, borderRadius: "12px", padding: "12px 16px", marginBottom: "16px", cursor: "pointer", overflow: "hidden", height: "60px", display: "flex", alignItems: "center" }}>
+            <div style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
+              opacity: tickerVisible ? 1 : 0,
+              transform: tickerVisible ? "translateY(0)" : "translateY(-10px)",
+              transition: "opacity 0.3s ease, transform 0.3s ease"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: currentTx.status === "success" ? `${C.success}22` : `${C.error}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>
+                  {currentTx.status === "success" ? "✅" : currentTx.status === "failed" ? "❌" : "↩️"}
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: "13px", fontWeight: "bold" }}>Transfer to {currentTx.recipient}</p>
+                  <p style={{ margin: 0, fontSize: "11px", color: C.gray }}>{new Date(currentTx.timestamp).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ margin: 0, fontWeight: "bold", color: C.error, fontSize: "14px" }}>-₦{currentTx.amount?.toLocaleString()}</p>
+                <p style={{ margin: 0, fontSize: "10px", color: currentTx.status === "success" ? C.success : C.gold }}>{currentTx.status}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* QUICK ACTIONS */}
         <div style={S.card}>
