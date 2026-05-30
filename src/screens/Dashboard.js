@@ -96,7 +96,7 @@ export default function Dashboard({ setScreen }) {
               {balanceVisible ? `₦${user?.balance?.toLocaleString()}` : "₦ ••••••"}
               <span style={{ fontSize: "16px", opacity: 0.8 }}> ›</span>
             </h1>
-            <button onClick={comingSoon} style={{ backgroundColor: "rgba(0,0,0,0.3)", border: "none", color: C.white, padding: "10px 16px", borderRadius: "20px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+            <button onClick={() => setScreen("addmoney")} style={{ backgroundColor: "rgba(0,0,0,0.3)", border: "none", color: C.white, padding: "10px 16px", borderRadius: "20px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
               + Add Money
             </button>
           </div>

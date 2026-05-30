@@ -6,6 +6,7 @@ import Dashboard from "./screens/Dashboard";
 import Transfer from "./screens/Transfer";
 import History from "./screens/History";
 import Profile from "./screens/Profile";
+import AddMoney from "./screens/AddMoney";
 
 function AppContent() {
   const [screen, setScreen] = useState("splash");
@@ -16,7 +17,8 @@ function AppContent() {
     dashboard: <Dashboard setScreen={setScreen} />,
     transfer: <Transfer setScreen={setScreen} />,
     history: <History setScreen={setScreen} />,
-    profile: <Profile setScreen={setScreen} />
+    profile: <Profile setScreen={setScreen} />,
+    addmoney: <AddMoney setScreen={setScreen} />
   };
 
   return screens[screen] || screens["dashboard"];
