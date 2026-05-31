@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../AuthContext";
 import { API, COLORS as C } from "../constants";
 import { S } from "../styles";
@@ -14,7 +14,6 @@ export default function AddMoney({ setScreen }) {
 
   const numAmount = parseFloat(amount || 0);
 
-  // Refresh balance after payment
   const refreshBalance = async () => {
     try {
       const res = await fetch(`${API}/balance`, {
@@ -47,10 +46,8 @@ export default function AddMoney({ setScreen }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
-
       setPaid(true);
       window.open(data.payment_url, "_blank");
-
     } catch (err) {
       setError(err.message);
     } finally {
@@ -60,22 +57,28 @@ export default function AddMoney({ setScreen }) {
 
   return (
     <div style={S.wrap}>
-      <div style={{ backgroundColor: C.dark, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button onClick={() => setScreen("dashboard")} style={{ background: "none", border: "none", color: C.white, fontSize: "22px", cursor: "pointer" }}>←</button>
+      <div style={{
+        backgroundColor: C.dark, padding: "16px 20px",
+        display: "flex", alignItems: "center", justifyContent: "space-between"
+      }}>
+        <button onClick={() => setScreen("dashboard")} style={{
+          background: "none", border: "none", color: C.white, fontSize: "22px", cursor: "pointer"
+        }}>←</button>
         <h2 style={{ margin: 0, fontSize: "16px" }}>Add Money</h2>
         <span></span>
       </div>
 
       <div style={{ padding: "20px" }}>
 
-        {/* Current Balance */}
-        <div style={{ ...S.card, textAlign: "center", background: `linear-gradient(135deg, ${C.orange}dd, ${C.darkOrange})` }}>
+        <div style={{
+          ...S.card, textAlign: "center",
+          background: `linear-gradient(135deg, ${C.orange}, ${C.darkOrange})`
+        }}>
           <p style={{ margin: "0 0 8px", fontSize: "13px", opacity: 0.9 }}>Current Balance</p>
           <h2 style={{ margin: 0, fontSize: "28px" }}>₦{user?.balance?.toLocaleString()}</h2>
         </div>
 
-        {/* After Payment - Show Refresh Button */}
-        {paid && (
+        {paid ? (
           <div style={{ ...S.card, textAlign: "center", border: `1px solid ${C.success}` }}>
             <p style={{ color: C.success, fontWeight: "bold", margin: "0 0 12px" }}>
               ✅ Payment completed on Paystack?
@@ -87,10 +90,7 @@ export default function AddMoney({ setScreen }) {
               🔄 Refresh My Balance
             </button>
           </div>
-        )}
-
-        {/* Amount Input */}
-        {!paid && (
+        ) : (
           <>
             <div style={S.card}>
               <p style={{ color: C.gray, fontSize: "12px", margin: "0 0 6px" }}>Enter Amount</p>
@@ -100,7 +100,8 @@ export default function AddMoney({ setScreen }) {
               {numAmount > 0 && numAmount < 100 && (
                 <p style={{ color: C.error, fontSize: "12px" }}>⚠️ Minimum funding amount is ₦100</p>
               )}
-              <input style={S.input} placeholder="Enter amount" value={amount} onChange={e => setAmount(e.target.value)} type="number" />
+              <input style={S.input} placeholder="Enter amount" value={amount}
+                onChange={e => setAmount(e.target.value)} type="number" />
               <div style={S.quickGrid}>
                 {QUICK_AMOUNTS.map(q => (
                   <button key={q} style={S.quickBtn} onClick={() => setAmount(q.toString())}>
@@ -112,7 +113,10 @@ export default function AddMoney({ setScreen }) {
 
             <div style={S.card}>
               <p style={{ margin: "0 0 12px", fontWeight: "bold", color: C.orange }}>💳 Payment Method</p>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", backgroundColor: C.dark, borderRadius: "10px", border: `1px solid ${C.orange}` }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: "12px", padding: "12px",
+                backgroundColor: C.dark, borderRadius: "10px", border: `1px solid ${C.orange}`
+              }}>
                 <span style={{ fontSize: "24px" }}>💳</span>
                 <div>
                   <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px" }}>Debit Card / Bank Transfer</p>
@@ -122,7 +126,11 @@ export default function AddMoney({ setScreen }) {
               </div>
             </div>
 
-            <div style={{ ...S.card, border: `1px solid ${C.gold}44`, backgroundColor: `${C.gold}11` }}>
+            <div style={{
+              ...S.card,
+              border: `1px solid ${C.gold}44`,
+              backgroundColor: `${C.gold}11`
+            }}>
               <p style={{ margin: 0, fontSize: "12px", color: C.gold }}>
                 🧪 Test Mode — Card: 4084084084084081 | Expiry: 12/30 | CVV: 408 | OTP: 123456
               </p>
@@ -130,7 +138,9 @@ export default function AddMoney({ setScreen }) {
 
             {error && <div style={S.error}>❌ {error}</div>}
 
-            <button style={{ ...S.btn, backgroundColor: loading ? C.gray : C.orange }} onClick={handleFund} disabled={loading}>
+            <button
+              style={{ ...S.btn, backgroundColor: loading ? C.gray : C.orange }}
+              onClick={handleFund} disabled={loading}>
               {loading ? "⏳ Initializing payment..." : `Fund Account ₦${numAmount.toLocaleString() || "0"}`}
             </button>
           </>
