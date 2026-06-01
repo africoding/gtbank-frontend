@@ -10,6 +10,9 @@ import AddMoney from "./screens/AddMoney";
 import Notifications from "./screens/Notifications";
 import Help from "./screens/Help";
 import QRScanner from "./screens/QRScanner";
+import Rewards from "./screens/Rewards";
+import Finance from "./screens/Finance";
+import Cards from "./screens/Cards";
 
 function AppContent() {
   const [screen, setScreen] = useState("splash");
@@ -24,7 +27,10 @@ function AppContent() {
     addmoney:      <AddMoney setScreen={setScreen} />,
     notifications: <Notifications setScreen={setScreen} />,
     help:          <Help setScreen={setScreen} />,
-    qrscanner:     <QRScanner setScreen={setScreen} />
+    qrscanner:     <QRScanner setScreen={setScreen} />,
+    rewards:       <Rewards setScreen={setScreen} />,
+    finance:       <Finance setScreen={setScreen} />,
+    cards:         <Cards setScreen={setScreen} />
   };
 
   return screens[screen] || screens["dashboard"];

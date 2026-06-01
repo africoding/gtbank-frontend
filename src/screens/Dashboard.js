@@ -25,8 +25,6 @@ export default function Dashboard({ setScreen }) {
   const [unreadCount, setUnreadCount] = useState(4);
   const tokenRef = useRef(token);
 
-  const comingSoon = () => alert("Coming Soon 🚀");
-
   // Fetch transactions once on mount
   useEffect(() => {
     const load = async () => {
@@ -49,9 +47,7 @@ export default function Dashboard({ setScreen }) {
   useEffect(() => {
     if (transactions.length < 2) return;
     const timer = setInterval(() => {
-      // Step 1: slide out upward
       setTxAnim("out");
-      // Step 2: change index + slide in
       setTimeout(() => {
         setTxIndex(prev => (prev + 1) % transactions.length);
         setTxAnim("in");
@@ -63,9 +59,7 @@ export default function Dashboard({ setScreen }) {
   // Message ticker — slides LEFT every 3s
   useEffect(() => {
     const timer = setInterval(() => {
-      // Step 1: slide out left
       setMsgAnim("out");
-      // Step 2: change message + slide in from right
       setTimeout(() => {
         setMsgIndex(prev => (prev + 1) % MESSAGES.length);
         setMsgAnim("in");
@@ -77,36 +71,45 @@ export default function Dashboard({ setScreen }) {
   const currentTx = transactions[txIndex];
   const currentMsg = MESSAGES[msgIndex];
 
-  // Animation styles
   const txStyle = {
     in:  { opacity: 1, transform: "translateY(0)" },
     out: { opacity: 0, transform: "translateY(-16px)" }
   };
+
   const msgStyle = {
     in:  { opacity: 1, transform: "translateX(0)" },
     out: { opacity: 0, transform: "translateX(-30px)" }
   };
 
+  const comingSoon = (name) => alert(`${name} coming soon! 🚀`);
+
+  const services = [
+    { icon: "📱", label: "Airtime", badge: "6%", action: () => comingSoon("Airtime") },
+    { icon: "📊", label: "Data", badge: "6%", action: () => comingSoon("Data") },
+    { icon: "🎰", label: "Betting", badge: null, action: () => comingSoon("Betting") },
+    { icon: "📺", label: "TV", badge: null, action: () => comingSoon("TV Bills") },
+    { icon: "🐷", label: "Savings", badge: null, action: () => setScreen("finance") },
+    { icon: "💰", label: "Loan", badge: "New", action: () => setScreen("finance") },
+    { icon: "🎁", label: "Invite", badge: "₦5600", action: () => setScreen("rewards") },
+    { icon: "⋯", label: "More", badge: null, action: () => comingSoon("More Services") }
+  ];
+
   return (
     <div style={{ ...S.wrap, paddingBottom: "120px" }}>
 
-      {/* ===== TOP BAR ===== */}
+      {/* TOP BAR */}
       <div style={{
         backgroundColor: C.dark, padding: "12px 16px",
-        display: "flex", alignItems: "center",
-        justifyContent: "space-between"
+        display: "flex", alignItems: "center", justifyContent: "space-between"
       }}>
-        {/* Profile */}
         <div onClick={() => setScreen("profile")} style={{
           width: "40px", height: "40px", borderRadius: "50%",
-          backgroundColor: C.orange, display: "flex",
-          alignItems: "center", justifyContent: "center",
-          fontSize: "18px", fontWeight: "bold", cursor: "pointer"
+          backgroundColor: C.orange, display: "flex", alignItems: "center",
+          justifyContent: "center", fontSize: "18px", fontWeight: "bold", cursor: "pointer"
         }}>
           {user?.full_name?.[0]}
         </div>
 
-        {/* Greeting */}
         <div style={{ textAlign: "center" }}>
           <p style={{ margin: 0, fontSize: "11px", color: C.gray }}>Welcome back</p>
           <p style={{ margin: 0, fontSize: "15px", fontWeight: "bold" }}>
@@ -114,20 +117,19 @@ export default function Dashboard({ setScreen }) {
           </p>
         </div>
 
-        {/* Icons */}
         <div style={{ display: "flex", gap: "8px" }}>
-          {[
-            { icon: "🎧", screen: "help" },
-            { icon: "📷", screen: "qrscanner" },
-          ].map(btn => (
-            <button key={btn.screen} onClick={() => setScreen(btn.screen)} style={{
-              background: `${C.orange}22`, border: "none", color: C.white,
-              fontSize: "16px", cursor: "pointer", width: "32px", height: "32px",
-              borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center"
-            }}>{btn.icon}</button>
-          ))}
+          <button onClick={() => setScreen("help")} style={{
+            background: `${C.orange}22`, border: "none", color: C.white,
+            fontSize: "16px", cursor: "pointer", width: "32px", height: "32px",
+            borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center"
+          }}>🎧</button>
 
-          {/* Notification with badge */}
+          <button onClick={() => setScreen("qrscanner")} style={{
+            background: `${C.orange}22`, border: "none", color: C.white,
+            fontSize: "16px", cursor: "pointer", width: "32px", height: "32px",
+            borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center"
+          }}>📷</button>
+
           <button onClick={() => { setUnreadCount(0); setScreen("notifications"); }} style={{
             background: `${C.orange}22`, border: "none", color: C.white,
             fontSize: "16px", cursor: "pointer", width: "32px", height: "32px",
@@ -147,7 +149,7 @@ export default function Dashboard({ setScreen }) {
         </div>
       </div>
 
-      {/* ===== BODY ===== */}
+      {/* BODY */}
       <div style={{ padding: "16px" }}>
 
         {/* BALANCE CARD */}
@@ -178,14 +180,13 @@ export default function Dashboard({ setScreen }) {
           </div>
         </div>
 
-        {/* TRANSACTION TICKER — flips UP */}
+        {/* TRANSACTION TICKER */}
         {transactions.length > 0 && currentTx && (
           <div onClick={() => setScreen("history")} style={{
             backgroundColor: C.card, borderRadius: "12px",
             padding: "12px 16px", marginBottom: "16px",
             cursor: "pointer", height: "64px",
-            display: "flex", alignItems: "center",
-            overflow: "hidden"
+            display: "flex", alignItems: "center", overflow: "hidden"
           }}>
             <div style={{
               display: "flex", justifyContent: "space-between",
@@ -231,7 +232,7 @@ export default function Dashboard({ setScreen }) {
             {[
               { icon: "👤", label: "To GTBank", action: () => setScreen("transfer") },
               { icon: "🏦", label: "To Bank", action: () => setScreen("transfer") },
-              { icon: "💳", label: "Withdraw", action: comingSoon }
+              { icon: "💳", label: "Withdraw", action: () => comingSoon("Withdraw") }
             ].map(item => (
               <button key={item.label} onClick={item.action} style={{
                 background: "none", border: "none", cursor: "pointer",
@@ -252,17 +253,8 @@ export default function Dashboard({ setScreen }) {
         {/* SERVICES */}
         <div style={S.card}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px" }}>
-            {[
-              { icon: "📱", label: "Airtime", badge: "6%" },
-              { icon: "📊", label: "Data", badge: "6%" },
-              { icon: "🎰", label: "Betting", badge: null },
-              { icon: "📺", label: "TV", badge: null },
-              { icon: "🐷", label: "Savings", badge: null },
-              { icon: "💰", label: "Loan", badge: "New" },
-              { icon: "🎁", label: "Invite", badge: "₦5600" },
-              { icon: "⋯", label: "More", badge: null }
-            ].map(item => (
-              <button key={item.label} onClick={comingSoon} style={{
+            {services.map(item => (
+              <button key={item.label} onClick={item.action} style={{
                 background: "none", border: "none", cursor: "pointer",
                 textAlign: "center", position: "relative"
               }}>
@@ -303,7 +295,7 @@ export default function Dashboard({ setScreen }) {
                 Special Target — Start small, finish big
               </p>
             </div>
-            <button onClick={comingSoon} style={{
+            <button onClick={() => setScreen("finance")} style={{
               backgroundColor: C.orange, border: "none", color: C.white,
               padding: "8px 14px", borderRadius: "20px",
               cursor: "pointer", fontSize: "12px", fontWeight: "bold"
@@ -313,17 +305,13 @@ export default function Dashboard({ setScreen }) {
 
       </div>
 
-      {/* ===== MESSAGE TICKER — slides LEFT, inline not fixed ===== */}
+      {/* MESSAGE TICKER */}
       <div style={{
         backgroundColor: `${C.orange}18`,
         borderTop: `1px solid ${C.orange}44`,
         borderBottom: `1px solid ${C.orange}44`,
-        padding: "8px 16px",
-        height: "38px",
-        display: "flex",
-        alignItems: "center",
-        overflow: "hidden",
-        marginBottom: "0"
+        padding: "8px 16px", height: "38px",
+        display: "flex", alignItems: "center", overflow: "hidden"
       }}>
         <div style={{
           display: "flex", alignItems: "center", gap: "8px", width: "100%",
@@ -338,13 +326,13 @@ export default function Dashboard({ setScreen }) {
         </div>
       </div>
 
-      {/* ===== BOTTOM NAV ===== */}
+      {/* BOTTOM NAV */}
       <div style={S.bottomNav}>
         {[
           { icon: "🏠", label: "Home", action: () => setScreen("dashboard") },
-          { icon: "🎁", label: "Rewards", action: comingSoon },
-          { icon: "📈", label: "Finance", action: comingSoon },
-          { icon: "💳", label: "Cards", action: comingSoon },
+          { icon: "🎁", label: "Rewards", action: () => setScreen("rewards") },
+          { icon: "📈", label: "Finance", action: () => setScreen("finance") },
+          { icon: "💳", label: "Cards", action: () => setScreen("cards") },
           { icon: "👤", label: "Me", action: () => setScreen("profile") }
         ].map(item => (
           <button key={item.label} style={S.navBtn(item.label === "Home")} onClick={item.action}>
