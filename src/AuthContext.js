@@ -15,18 +15,17 @@ export function AuthProvider({ children }) {
   // Like OPay/Kuda — user never sees expiry error
   // Refreshes token 30 minutes before expiry
   // ============================================
-  const silentRefresh = useCallback(async () => {
+ const silentRefresh = useCallback(async () => {
     try {
-      const savedUser = localStorage.getItem("gtbank_user");
-      const savedPhone = savedUser ? JSON.parse(savedUser).phone : null;
-      const savedPin = localStorage.getItem("gtbank_pin_hash");
+      const currentToken = tokenRef.current || localStorage.getItem("gtbank_token");
+      if (!currentToken) return;
 
-      if (!savedPhone || !savedPin) return;
-
-      const res = await fetch(`${API}/login`, {
+      const res = await fetch(`${API}/refresh`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: savedPhone, pin: savedPin })
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentToken}`
+        }
       });
 
       if (res.ok) {
@@ -38,6 +37,9 @@ export function AuthProvider({ children }) {
         setUser(data.user);
         console.log("[Session] Token silently refreshed ✓");
         scheduleRefresh();
+      } else {
+        console.warn("[Session] Refresh failed, retrying in 60s");
+        setTimeout(() => silentRefresh(), 60000);
       }
     } catch (err) {
       console.warn("[Session] Silent refresh failed, retrying in 60s");
@@ -57,12 +59,23 @@ export function AuthProvider({ children }) {
   // GET TOKEN — always returns valid token
   // Auto-refreshes if expired before returning
   // ============================================
-  const getToken = useCallback(async () => {
+ const getToken = useCallback(async () => {
     const currentToken = tokenRef.current || localStorage.getItem("gtbank_token");
     if (!currentToken) return null;
-    return currentToken;
-  }, []);
 
+    try {
+      const payload = JSON.parse(atob(currentToken.split('.')[1]));
+      const expiresIn = payload.exp - Math.floor(Date.now() / 1000);
+      
+      if (expiresIn < 3600) {
+        console.log("[Session] Token expiring soon, refreshing now...");
+        await silentRefresh();
+        return tokenRef.current;
+      }
+    } catch (e) {}
+
+    return currentToken;
+  }, [silentRefresh]);
   // ============================================
   // LOAD SAVED SESSION ON APP START
   // ============================================
