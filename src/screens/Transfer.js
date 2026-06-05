@@ -52,7 +52,7 @@ function LookingForAccount() {
 }
 
 export default function Transfer({ setScreen }) {
-  const { user, token, updateBalance } = useAuth();
+  const { user, token, updateBalance, getToken } = useAuth();
   const [step, setStep] = useState(1);
   const [accountNumber, setAccountNumber] = useState("");
   const [recipientBank, setRecipientBank] = useState("");
@@ -105,7 +105,7 @@ export default function Transfer({ setScreen }) {
     setError(null);
     try {
       await hashPIN(pin);
-      const currentToken = token || localStorage.getItem("gtbank_token");
+      const currentToken = await getToken();
       const res = await fetch(`${API}/transfer`, {
         method: "POST",
         headers: {
