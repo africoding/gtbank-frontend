@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
   // Like OPay/Kuda — user never sees expiry error
   // Refreshes token 30 minutes before expiry
   // ============================================
+  // eslint-disable-next-line react-hooks/exhaustive-deps
  const silentRefresh = useCallback(async () => {
     try {
       const currentToken = tokenRef.current || localStorage.getItem("gtbank_token");

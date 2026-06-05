@@ -52,7 +52,7 @@ function LookingForAccount() {
 }
 
 export default function Transfer({ setScreen }) {
-  const { user, token, updateBalance, getToken } = useAuth();
+  const { user, updateBalance, getToken } = useAuth();
   const [step, setStep] = useState(1);
   const [accountNumber, setAccountNumber] = useState("");
   const [recipientBank, setRecipientBank] = useState("");
