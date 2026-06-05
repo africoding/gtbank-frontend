@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import { API, COLORS as C, BANKS, QUICK_AMOUNTS } from "../constants";
 import { S } from "../styles";
@@ -7,14 +7,15 @@ async function hashPIN(pin) {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin);
   const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 function LookingForAccount() {
   return (
     <div style={{
       position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: C.navy, display: "flex", flexDirection: "column",
+      backgroundColor: C.navy, display: "flex",
       alignItems: "center", justifyContent: "center", zIndex: 999
     }}>
       <div style={{ position: "relative", width: "220px", height: "220px" }}>
@@ -37,18 +38,21 @@ function LookingForAccount() {
           transform: "translate(-50%, -50%)", textAlign: "center"
         }}>
           <p style={{
-            color: C.white, fontWeight: "bold", fontSize: "16px",
-            margin: 0, letterSpacing: "1px"
+            color: C.white, fontWeight: "bold",
+            fontSize: "16px", margin: 0, letterSpacing: "1px"
           }}>LOOKING<br />FOR ACCOUNT</p>
         </div>
       </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }`}</style>
     </div>
   );
 }
 
 export default function Transfer({ setScreen }) {
-  const { user, token, getToken, updateBalance } = useAuth();
+  const { user, token, updateBalance } = useAuth();
   const [step, setStep] = useState(1);
   const [accountNumber, setAccountNumber] = useState("");
   const [recipientBank, setRecipientBank] = useState("");
@@ -61,10 +65,11 @@ export default function Transfer({ setScreen }) {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [sessionRefreshed, setSessionRefreshed] = useState(false);
 
   const numAmount = parseFloat(amount || 0);
-  const fee = numAmount === 0 ? 0 : numAmount < 5000 ? 0 : numAmount <= 50000 ? 10 : 50;
+  const fee = numAmount === 0 ? 0
+    : numAmount < 5000 ? 0
+    : numAmount <= 50000 ? 10 : 50;
   const total = numAmount + fee;
 
   // Auto lookup when 10 digits entered
@@ -98,32 +103,22 @@ export default function Transfer({ setScreen }) {
     if (pin.length !== 4) { setError("Enter your 4-digit PIN"); return; }
     setLoading(true);
     setError(null);
-
     try {
-      // Silently get fresh token — user never blocked
-      const freshToken = await getToken();
       await hashPIN(pin);
-
+      const currentToken = token || localStorage.getItem("gtbank_token");
       const res = await fetch(`${API}/transfer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${freshToken}`
+          Authorization: `Bearer ${currentToken}`
         },
-        body: JSON.stringify({ recipient: accountNumber, amount: numAmount })
+        body: JSON.stringify({
+          recipient: accountNumber,
+          amount: numAmount
+        })
       });
-
       const data = await res.json();
-
-      // Handle expired token silently — retry once
-      if (res.status === 401) {
-        setSessionRefreshed(true);
-        setTimeout(() => setSessionRefreshed(false), 2000);
-        throw new Error("Session refreshed. Please try again.");
-      }
-
       if (!res.ok) throw new Error(data.detail);
-
       setResult(data);
       setStep(4);
       if (data.status === "success") {
@@ -147,26 +142,16 @@ export default function Transfer({ setScreen }) {
     <div style={{ ...S.wrap, paddingBottom: "20px" }}>
       {lookingForAccount && <LookingForAccount />}
 
-      {/* Silent session refresh indicator */}
-      {sessionRefreshed && (
-        <div style={{
-          position: "fixed", top: "10px", right: "10px",
-          backgroundColor: "rgba(0,150,36,0.9)", color: C.white,
-          fontSize: "11px", padding: "4px 8px", borderRadius: "6px",
-          zIndex: 999, fontFamily: "monospace"
-        }}>
-          🔄 Session renewed
-        </div>
-      )}
-
       {/* HEADER */}
       <div style={{
         backgroundColor: C.dark, padding: "16px 20px",
         display: "flex", alignItems: "center", justifyContent: "space-between"
       }}>
-        <button onClick={() => step === 1 ? setScreen("dashboard") : setStep(step - 1)} style={{
-          background: "none", border: "none", color: C.white, fontSize: "22px", cursor: "pointer"
-        }}>←</button>
+        <button
+          onClick={() => step === 1 ? setScreen("dashboard") : setStep(step - 1)}
+          style={{ background: "none", border: "none", color: C.white, fontSize: "22px", cursor: "pointer" }}>
+          ←
+        </button>
         <h2 style={{ margin: 0, fontSize: "16px" }}>
           {step === 1 && "Transfer To Bank Account"}
           {step === 2 && "Enter Amount"}
@@ -190,36 +175,47 @@ export default function Transfer({ setScreen }) {
             }}>
               <span>⚡</span>
               <span style={{ fontSize: "13px" }}>
-                Free transfers for the day: <strong style={{ color: C.success }}>3</strong>
+                Free transfers today:
+                <strong style={{ color: C.success }}> 3</strong>
               </span>
             </div>
 
             <div style={S.card}>
-              <h3 style={{ margin: "0 0 16px", color: C.orange }}>Recipient Account</h3>
+              <h3 style={{ margin: "0 0 16px", color: C.orange }}>
+                Recipient Account
+              </h3>
 
-              <label style={{ color: C.gray, fontSize: "12px", display: "block", marginBottom: "4px" }}>
+              <label style={{
+                color: C.gray, fontSize: "12px",
+                display: "block", marginBottom: "4px"
+              }}>
                 Account Number
               </label>
               <input
                 style={S.input}
                 placeholder="Enter 10-digit Account Number"
                 value={accountNumber}
-                onChange={e => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                type="tel" maxLength={10}
+                onChange={e => setAccountNumber(
+                  e.target.value.replace(/\D/g, "").slice(0, 10)
+                )}
+                type="tel"
+                maxLength={10}
               />
 
-              {/* Account Found */}
+              {/* Account Found Badge */}
               {foundAccount && (
                 <div style={{
                   backgroundColor: `${C.success}22`,
                   border: `1px solid ${C.success}`,
-                  borderRadius: "12px", padding: "16px", marginBottom: "16px"
+                  borderRadius: "12px", padding: "16px",
+                  marginBottom: "16px"
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div style={{
                       width: "44px", height: "44px", borderRadius: "50%",
-                      backgroundColor: C.orange, display: "flex",
-                      alignItems: "center", justifyContent: "center",
+                      backgroundColor: C.orange,
+                      display: "flex", alignItems: "center",
+                      justifyContent: "center",
                       fontWeight: "bold", fontSize: "18px"
                     }}>
                       {foundAccount.account_name?.[0]}
@@ -232,18 +228,22 @@ export default function Transfer({ setScreen }) {
                         {foundAccount.bank}
                       </p>
                       <p style={{ margin: 0, fontSize: "11px", color: C.success }}>
-                        ✅ Tier 1 Account • Verified
+                        ✅ Verified Account
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <label style={{ color: C.gray, fontSize: "12px", display: "block", marginBottom: "4px" }}>
+              <label style={{
+                color: C.gray, fontSize: "12px",
+                display: "block", marginBottom: "4px"
+              }}>
                 Recipient Bank
               </label>
               <select
-                style={S.select} value={recipientBank}
+                style={S.select}
+                value={recipientBank}
                 onChange={e => setRecipientBank(e.target.value)}>
                 <option value="">Select Bank ›</option>
                 {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
@@ -252,7 +252,10 @@ export default function Transfer({ setScreen }) {
               {accountError && <div style={S.error}>❌ {accountError}</div>}
 
               <button
-                style={{ ...S.btn, backgroundColor: foundAccount ? C.orange : C.gray }}
+                style={{
+                  ...S.btn,
+                  backgroundColor: foundAccount ? C.orange : C.gray
+                }}
                 onClick={() => { if (!foundAccount) return; setStep(2); }}
                 disabled={!foundAccount}>
                 Next
@@ -265,11 +268,15 @@ export default function Transfer({ setScreen }) {
         {step === 2 && (
           <>
             <div style={S.card}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+              <div style={{
+                display: "flex", alignItems: "center",
+                gap: "10px", marginBottom: "16px"
+              }}>
                 <div style={{
                   width: "40px", height: "40px", borderRadius: "50%",
-                  backgroundColor: C.orange, display: "flex",
-                  alignItems: "center", justifyContent: "center", fontWeight: "bold"
+                  backgroundColor: C.orange,
+                  display: "flex", alignItems: "center",
+                  justifyContent: "center", fontWeight: "bold"
                 }}>
                   {foundAccount?.account_name?.[0]}
                 </div>
@@ -287,17 +294,25 @@ export default function Transfer({ setScreen }) {
               <div style={{ fontSize: "36px", fontWeight: "bold", marginBottom: "4px" }}>
                 ₦ {amount || "0"}<span style={{ color: C.gray }}>.00</span>
               </div>
+
               {numAmount > 0 && numAmount < 10 && (
                 <p style={{ color: C.error, fontSize: "12px" }}>
-                  ⚠️ Amount must be between ₦10.00 and ₦5,000,000.00
+                  ⚠️ Minimum transfer is ₦10
                 </p>
               )}
-              <input style={S.input} placeholder="Enter amount"
-                value={amount} onChange={e => setAmount(e.target.value)} type="number" />
+
+              <input
+                style={S.input}
+                placeholder="Enter amount"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                type="number"
+              />
 
               <div style={S.quickGrid}>
                 {QUICK_AMOUNTS.map(q => (
-                  <button key={q} style={S.quickBtn} onClick={() => setAmount(q.toString())}>
+                  <button key={q} style={S.quickBtn}
+                    onClick={() => setAmount(q.toString())}>
                     ₦{q.toLocaleString()}
                   </button>
                 ))}
@@ -305,12 +320,20 @@ export default function Transfer({ setScreen }) {
             </div>
 
             <div style={S.card}>
-              <p style={{ color: C.gray, fontSize: "12px", margin: "0 0 8px" }}>Remark</p>
-              <input style={S.input} placeholder="What's this for? (Optional)"
-                value={notes} onChange={e => setNotes(e.target.value)} />
+              <p style={{ color: C.gray, fontSize: "12px", margin: "0 0 8px" }}>
+                Remark (Optional)
+              </p>
+              <input
+                style={S.input}
+                placeholder="What's this for?"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+              />
               <div style={{ display: "flex", gap: "10px" }}>
-                <button style={{ ...S.quickBtn, flex: 1 }} onClick={() => setNotes("Purchase")}>Purchase</button>
-                <button style={{ ...S.quickBtn, flex: 1 }} onClick={() => setNotes("Personal")}>Personal</button>
+                <button style={{ ...S.quickBtn, flex: 1 }}
+                  onClick={() => setNotes("Purchase")}>Purchase</button>
+                <button style={{ ...S.quickBtn, flex: 1 }}
+                  onClick={() => setNotes("Personal")}>Personal</button>
               </div>
             </div>
 
@@ -326,20 +349,34 @@ export default function Transfer({ setScreen }) {
                     {fee === 0 ? "Free" : `₦${fee}`}
                   </span>
                 </div>
-                <div style={{ ...S.feeRow, borderBottom: "none", fontWeight: "bold", fontSize: "16px" }}>
+                <div style={{
+                  ...S.feeRow, borderBottom: "none",
+                  fontWeight: "bold", fontSize: "16px"
+                }}>
                   <span>Total</span>
-                  <span style={{ color: C.orange }}>₦{total.toLocaleString()}</span>
+                  <span style={{ color: C.orange }}>
+                    ₦{total.toLocaleString()}
+                  </span>
                 </div>
               </div>
             )}
 
             {error && <div style={S.error}>{error}</div>}
+
             <button style={S.btn} onClick={() => {
-              if (!amount || numAmount < 10) { setError("Minimum transfer is ₦10"); return; }
-              if (numAmount > 5000000) { setError("Maximum transfer is ₦5,000,000"); return; }
-              if (numAmount > user.balance) { setError("Insufficient balance"); return; }
+              if (!amount || numAmount < 10) {
+                setError("Minimum transfer is ₦10"); return;
+              }
+              if (numAmount > 5000000) {
+                setError("Maximum transfer is ₦5,000,000"); return;
+              }
+              if (numAmount > user.balance) {
+                setError("Insufficient balance"); return;
+              }
               setError(null); setStep(3);
-            }}>Confirm</button>
+            }}>
+              Continue
+            </button>
           </>
         )}
 
@@ -359,7 +396,10 @@ export default function Transfer({ setScreen }) {
               </p>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", gap: "16px", margin: "30px 0" }}>
+            <div style={{
+              display: "flex", justifyContent: "center",
+              gap: "16px", margin: "30px 0"
+            }}>
               {[0,1,2,3].map(i => (
                 <div key={i} style={S.pinDot(i < pin.length)} />
               ))}
@@ -370,17 +410,26 @@ export default function Transfer({ setScreen }) {
             <div style={S.numpad}>
               {[1,2,3,4,5,6,7,8,9].map(n => (
                 <button key={n} style={S.numKey}
-                  onClick={() => pin.length < 4 && setPin(pin + n)}>{n}</button>
+                  onClick={() => pin.length < 4 && setPin(pin + n)}>
+                  {n}
+                </button>
               ))}
               <div></div>
-              <button style={S.numKey} onClick={() => pin.length < 4 && setPin(pin + "0")}>0</button>
-              <button style={S.numKey} onClick={() => setPin(pin.slice(0, -1))}>⌫</button>
+              <button style={S.numKey}
+                onClick={() => pin.length < 4 && setPin(pin + "0")}>
+                0
+              </button>
+              <button style={S.numKey}
+                onClick={() => setPin(pin.slice(0, -1))}>
+                ⌫
+              </button>
             </div>
 
             <button
               style={{
                 ...S.btn, marginTop: "20px",
-                backgroundColor: loading ? C.gray : pin.length === 4 ? C.orange : C.gray
+                backgroundColor: loading ? C.gray
+                  : pin.length === 4 ? C.orange : C.gray
               }}
               onClick={handleTransfer}
               disabled={loading || pin.length !== 4}>
@@ -408,9 +457,16 @@ export default function Transfer({ setScreen }) {
             </h2>
             <p style={{ color: C.gray }}>{result.message}</p>
 
-            <div style={{ ...S.card, backgroundColor: "#064e1b", textAlign: "center" }}>
-              <p style={{ color: C.gray, fontSize: "12px", margin: "0 0 4px" }}>Reference Number</p>
-              <p style={{ color: C.success, fontWeight: "bold", fontSize: "18px", margin: 0 }}>
+            <div style={{
+              ...S.card, backgroundColor: "#064e1b", textAlign: "center"
+            }}>
+              <p style={{ color: C.gray, fontSize: "12px", margin: "0 0 4px" }}>
+                Reference Number
+              </p>
+              <p style={{
+                color: C.success, fontWeight: "bold",
+                fontSize: "18px", margin: 0
+              }}>
                 {result.reference}
               </p>
             </div>
@@ -429,12 +485,16 @@ export default function Transfer({ setScreen }) {
                     color: label === "Status"
                       ? (result.status === "success" ? C.success : C.gold)
                       : C.white
-                  }}>{value}</span>
+                  }}>
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>
 
-            <button style={S.btn} onClick={reset}>Back to Dashboard</button>
+            <button style={S.btn} onClick={reset}>
+              Back to Dashboard
+            </button>
           </div>
         )}
       </div>
