@@ -84,10 +84,10 @@ export default function Dashboard({ setScreen }) {
   const comingSoon = (name) => alert(`${name} coming soon! 🚀`);
 
   const services = [
-    { icon: "📱", label: "Airtime", badge: "6%", action: () => comingSoon("Airtime") },
-    { icon: "📊", label: "Data", badge: "6%", action: () => comingSoon("Data") },
-    { icon: "🎰", label: "Betting", badge: null, action: () => comingSoon("Betting") },
-    { icon: "📺", label: "TV", badge: null, action: () => comingSoon("TV Bills") },
+    { icon: "📱", label: "Airtime", badge: "6%", action: () => setScreen("airtime") },
+    { icon: "📊", label: "Data", badge: "6%", action: () => setScreen("airtime") },
+    { icon: "🎰", label: "Betting", badge: null, action: () => setScreen("airtime") },
+    { icon: "📺", label: "TV", badge: null, action: () => setScreen("airtime") },
     { icon: "🐷", label: "Savings", badge: null, action: () => setScreen("finance") },
     { icon: "💰", label: "Loan", badge: "New", action: () => setScreen("finance") },
     { icon: "🎁", label: "Invite", badge: "₦5600", action: () => setScreen("rewards") },
@@ -232,7 +232,7 @@ export default function Dashboard({ setScreen }) {
             {[
               { icon: "👤", label: "To GTBank", action: () => setScreen("transfer") },
               { icon: "🏦", label: "To Bank", action: () => setScreen("transfer") },
-              { icon: "💳", label: "Withdraw", action: () => comingSoon("Withdraw") }
+              { icon: "💳", label: "Withdraw", action: () => setScreen("transfer") }
             ].map(item => (
               <button key={item.label} onClick={item.action} style={{
                 background: "none", border: "none", cursor: "pointer",

@@ -13,6 +13,7 @@ import QRScanner from "./screens/QRScanner";
 import Rewards from "./screens/Rewards";
 import Finance from "./screens/Finance";
 import Cards from "./screens/Cards";
+import Airtime from "./screens/Airtime";
 
 function AppContent() {
   const [screen, setScreen] = useState("splash");
@@ -30,7 +31,8 @@ function AppContent() {
     qrscanner:     <QRScanner setScreen={setScreen} />,
     rewards:       <Rewards setScreen={setScreen} />,
     finance:       <Finance setScreen={setScreen} />,
-    cards:         <Cards setScreen={setScreen} />
+    cards:         <Cards setScreen={setScreen} />,
+    airtime:       <Airtime setScreen={setScreen} />
   };
 
   return screens[screen] || screens["dashboard"];
